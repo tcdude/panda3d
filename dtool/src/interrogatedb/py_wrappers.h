@@ -56,22 +56,14 @@ struct Dtool_GeneratorWrapper {
   iternextfunc _iternext_func;
 };
 
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_SequenceWrapper_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_MutableSequenceWrapper_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_MappingWrapper_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_MutableMappingWrapper_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_MappingWrapper_Items_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_MappingWrapper_Keys_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_MappingWrapper_Values_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_GeneratorWrapper_Type;
-EXPCL_INTERROGATEDB extern PyTypeObject Dtool_StaticProperty_Type;
+inline Dtool_SequenceWrapper *Dtool_NewSequenceWrapper(PyObject *self, const char *name);
+inline Dtool_MutableSequenceWrapper *Dtool_NewMutableSequenceWrapper(PyObject *self, const char *name);
+inline Dtool_MappingWrapper *Dtool_NewMappingWrapper(PyObject *self, const char *name);
+inline Dtool_MappingWrapper *Dtool_NewMutableMappingWrapper(PyObject *self, const char *name);
+inline PyObject *Dtool_NewGenerator(PyObject *self, iternextfunc gen_next);
+inline PyObject *Dtool_NewStaticProperty(PyTypeObject *obj, const PyGetSetDef *getset);
 
-EXPCL_INTERROGATEDB Dtool_SequenceWrapper *Dtool_NewSequenceWrapper(PyObject *self, const char *name);
-EXPCL_INTERROGATEDB Dtool_MutableSequenceWrapper *Dtool_NewMutableSequenceWrapper(PyObject *self, const char *name);
-EXPCL_INTERROGATEDB Dtool_MappingWrapper *Dtool_NewMappingWrapper(PyObject *self, const char *name);
-EXPCL_INTERROGATEDB Dtool_MappingWrapper *Dtool_NewMutableMappingWrapper(PyObject *self, const char *name);
-EXPCL_INTERROGATEDB PyObject *Dtool_NewGenerator(PyObject *self, const char *name, iternextfunc func);
-EXPCL_INTERROGATEDB PyObject *Dtool_NewStaticProperty(PyTypeObject *obj, const PyGetSetDef *getset);
+#include "py_wrappers.I"
 
 #endif  // HAVE_PYTHON
 

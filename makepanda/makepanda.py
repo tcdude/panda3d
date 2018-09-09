@@ -3430,14 +3430,13 @@ TargetAdd('libp3dtoolconfig.dll', opts=['ADVAPI', 'OPENSSL', 'WINGDI', 'WINUSER'
 # DIRECTORY: dtool/src/interrogatedb/
 #
 
-OPTS=['DIR:dtool/src/interrogatedb', 'BUILDING:INTERROGATEDB', 'PYTHON']
+OPTS=['DIR:dtool/src/interrogatedb', 'BUILDING:INTERROGATEDB']
 TargetAdd('p3interrogatedb_composite1.obj', opts=OPTS, input='p3interrogatedb_composite1.cxx')
 TargetAdd('p3interrogatedb_composite2.obj', opts=OPTS, input='p3interrogatedb_composite2.cxx')
 TargetAdd('libp3interrogatedb.dll', input='p3interrogatedb_composite1.obj')
 TargetAdd('libp3interrogatedb.dll', input='p3interrogatedb_composite2.obj')
 TargetAdd('libp3interrogatedb.dll', input='libp3dtool.dll')
 TargetAdd('libp3interrogatedb.dll', input='libp3dtoolconfig.dll')
-TargetAdd('libp3interrogatedb.dll', opts=['PYTHON'])
 
 if not PkgSkip("PYTHON"):
   # This used to be called dtoolconfig.pyd, but it just contains the interrogatedb

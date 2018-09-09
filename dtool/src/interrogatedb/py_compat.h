@@ -106,7 +106,7 @@ typedef int Py_ssize_t;
 // PyInt_FromSize_t automatically picks the right type.
 #  define PyLongOrInt_AS_LONG PyInt_AsLong
 
-EXPCL_INTERROGATEDB size_t PyLongOrInt_AsSize_t(PyObject *);
+inline size_t PyLongOrInt_AsSize_t(PyObject *);
 #endif
 
 // Which character to use in PyArg_ParseTuple et al for a byte string.
@@ -202,6 +202,8 @@ INLINE PyObject *_PyObject_FastCall(PyObject *func, PyObject **args, Py_ssize_t 
 #ifndef _PyErr_OCCURRED
 #  define _PyErr_OCCURRED() PyErr_Occurred()
 #endif
+
+#include "py_compat.I"
 
 #endif  // HAVE_PYTHON
 

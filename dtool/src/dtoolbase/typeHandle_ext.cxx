@@ -22,7 +22,7 @@
  */
 TypeHandle Extension<TypeHandle>::
 make(PyTypeObject *tp) {
-  if (!PyType_IsSubtype(tp, &Dtool_DTOOL_SUPER_BASE._PyType)) {
+  if (!PyType_IsSubtype(tp, (PyTypeObject *)Dtool_GetSuperBase())) {
     PyErr_SetString(PyExc_TypeError, "a Panda type is required");
     return TypeHandle::none();
   }
