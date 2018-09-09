@@ -825,6 +825,27 @@ write_prototypes(ostream &out_code, ostream *out_h) {
   out_code << " * Extern declarations for imported classes\n";
   out_code << " */\n";
 
+  // Write out a table of the externally imported types that will be filled in
+  // upon module initialization.
+  if (!_external_imports.empty()) {
+    out_code << "#ifndef LINK_ALL_STATIC\n";
+    out_code << "static TypeRegistry::PythonTypeDef imports[] = {\n";
+
+    int idx = 0;
+    for (CPPType *type : _external_imports) {
+      string class_name = type->get_local_name(&parser);
+      string safe_name = make_safe_name(class_name);
+      //if (!has_get_class_type_function(type)) {
+        out_code << "  {\"" << class_name << "\", nullptr},\n";
+        out_code << "#define Dtool_Ptr_" << safe_name << " ((Dtool_PyTypedObject *)imports[" << idx << "].type)\n";
+        ++idx;
+      //}
+    }
+    out_code << "  {nullptr, nullptr},\n";
+    out_code << "};\n";
+    out_code << "#endif\n\n";
+  }
+
   for (CPPType *type : _external_imports) {
     string class_name = type->get_local_name(&parser);
     string safe_name = make_safe_name(class_name);
@@ -834,7 +855,9 @@ write_prototypes(ostream &out_code, ostream *out_h) {
     out_code << "#ifndef LINK_ALL_STATIC\n";
     // out_code << "IMPORT_THIS struct Dtool_PyTypedObject Dtool_" <<
     // safe_name << ";\n";
-    out_code << "static struct Dtool_PyTypedObject *Dtool_Ptr_" << safe_name << ";\n";
+    //if (has_get_class_type_function(type)) {
+    //  out_code << "static struct Dtool_PyTypedObject *Dtool_Ptr_" << safe_name << ";\n";
+    //}
     // out_code << "#define Dtool_Ptr_" << safe_name << " &Dtool_" <<
     // safe_name << "\n"; out_code << "IMPORT_THIS void
     // Dtool_PyModuleClassInit_" << safe_name << "(PyObject *module);\n";
@@ -1258,36 +1281,39 @@ write_module_support(ostream &out, ostream *out_h, InterrogateModuleDef *def) {
 
   Objects::iterator oi;
 
-  out << "void Dtool_" << def->library_name << "_RegisterTypes() {\n";
+  out << "void Dtool_" << def->library_name << "_RegisterTypes() {\n"
+         "  TypeRegistry *registry = TypeRegistry::ptr();\n"
+         "  nassertv(registry != nullptr);\n";
+
   for (oi = _objects.begin(); oi != _objects.end(); ++oi) {
     Object *object = (*oi).second;
-    if (object->_itype.is_class() ||
-        object->_itype.is_struct()) {
-      if (is_cpp_type_legal(object->_itype._cpptype) &&
-          isExportThisRun(object->_itype._cpptype)) {
-        string class_name = make_safe_name(object->_itype.get_scoped_name());
-        bool is_typed = has_get_class_type_function(object->_itype._cpptype);
+    if (object->_itype.is_class() || object->_itype.is_struct()) {
+      CPPType *type = object->_itype._cpptype;
+      if (is_cpp_type_legal(type) && isExportThisRun(type)) {
+        string class_name = object->_itype.get_scoped_name();
+        string safe_name = make_safe_name(class_name);
+        bool is_typed = has_get_class_type_function(type);
 
         if (is_typed) {
-          if (has_init_type_function(object->_itype._cpptype)) {
+          out << "  {\n";
+          if (has_init_type_function(type)) {
             // Call the init_type function.  This isn't necessary for all
             // types as many of them are automatically initialized at static
             // init type, but for some extension classes it's useful.
-            out << "  " << object->_itype._cpptype->get_local_name(&parser)
+            out << "    " << type->get_local_name(&parser)
                 << "::init_type();\n";
           }
-          out << "  Dtool_" << class_name << "._type = "
-              << object->_itype._cpptype->get_local_name(&parser)
-              << "::get_class_type();\n"
-              << "  RegisterRuntimeTypedClass(Dtool_" << class_name << ");\n";
-
+          out << "    TypeHandle handle = " << type->get_local_name(&parser)
+              << "::get_class_type();\n";
+          out << "    Dtool_" << safe_name << "._type = handle;\n";
+          out << "    registry->register_python_type(\"" << class_name
+              << "\", (PyObject *)&Dtool_" << safe_name << ", handle);\n";
+          out << "  }\n";
         } else {
-          out << "#ifndef LINK_ALL_STATIC\n"
-              << "  RegisterNamedClass(\"" << object->_itype.get_scoped_name()
-              << "\", Dtool_" << class_name << ");\n"
-              << "#endif\n";
-
-          if (IsPandaTypedObject(object->_itype._cpptype->as_struct_type())) {
+          // Register it without TypeHandle.
+          out << "  registry->register_python_type(\"" << class_name
+              << "\", (PyObject *)&Dtool_" << safe_name << ");\n";
+          if (IsPandaTypedObject(type->as_struct_type())) {
             nout << object->_itype.get_scoped_name() << " derives from TypedObject, "
                  << "but does not define a get_class_type() function.\n";
           }
@@ -1301,6 +1327,14 @@ write_module_support(ostream &out, ostream *out_h, InterrogateModuleDef *def) {
   out << "#ifndef LINK_ALL_STATIC\n";
   out << "  // Resolve externally imported types.\n";
 
+  if (!_external_imports.empty()) {
+    out <<
+      "  TypeRegistry *registry = TypeRegistry::ptr();\n"
+      "  nassertv(registry != nullptr);\n"
+      "  registry->resolve_python_types(imports);\n";
+  }
+
+  /*
   for (CPPType *type : _external_imports) {
     string class_name = type->get_local_name(&parser);
     string safe_name = make_safe_name(class_name);
@@ -1310,7 +1344,7 @@ write_module_support(ostream &out, ostream *out_h, InterrogateModuleDef *def) {
     } else {
       out << "  Dtool_Ptr_" << safe_name << " = LookupNamedClass(\"" << class_name << "\");\n";
     }
-  }
+  }*/
   out << "#endif\n";
   out << "}\n\n";
 

@@ -494,6 +494,92 @@ write(ostream &out) const {
 }
 
 /**
+ * Records the given Python type pointer in the type registry for the benefit
+ * of interrogate.  The TypeHandle refers to an existing TypeHandle if it is
+ * known for this type; it may also be TypeHandle::none().
+ */
+void TypeRegistry::
+register_python_type(const char *name, PyObject *python_type, TypeHandle handle) {
+  _lock->lock();
+
+  string sname(name);
+
+  if (handle._index > 0 && (size_t)handle._index < _handle_registry.size()) {
+    TypeRegistryNode *rnode = _handle_registry[(size_t)handle._index];
+    rnode->_python_type = python_type;
+
+    // Check that the name matches.
+    NameRegistry::const_iterator ri;
+    ri = _name_registry.find(sname);
+    if (ri != _name_registry.end()) {
+      if ((*ri).second != rnode) {
+        cerr << "Type index for " << sname << " ("
+          << rnode->_handle.get_index() << ") was expected to match "
+          << handle.get_name() << " (" << handle.get_index() << ")\n";
+      }
+    } else {
+#ifndef NDEBUG
+      // Let's enforce this only for non-template types, otherwise it gets
+      // pretty complicated.
+      if (strchr(name, '<') == nullptr) {
+        cerr
+          << sname << " was registered under a different name ("
+          << rnode->_name << ")\n";
+      }
+#endif
+    }
+  }
+
+  // Also register it by its fully scoped C++ name.
+  _python_types[std::move(sname)] = python_type;
+
+  _lock->unlock();
+}
+
+/**
+ * Borrows a reference to a previously-registered Python type object with the
+ * given fully-scoped C++ name.
+ */
+PyObject *TypeRegistry::
+find_python_type(const string &name) const {
+  _lock->lock();
+
+  PyObject *type = nullptr;
+
+  PythonTypes::const_iterator ti;
+  ti = _python_types.find(name);
+  if (ti != _python_types.end()) {
+    type = (*ti).second;
+  }
+  _lock->unlock();
+
+  return type;
+}
+
+/**
+ * This is a convenient way to call find_python_type for a lot of types, for
+ * the benefit of interrogate-created Python modules.
+ */
+void TypeRegistry::
+resolve_python_types(PythonTypeDef *types) {
+  _lock->lock();
+
+  while (types->name != nullptr) {
+    PythonTypes::const_iterator ti;
+    ti = _python_types.find(types->name);
+    if (ti != _python_types.end()) {
+      types->type = (*ti).second;
+    } else {
+      cerr << "Attempt to use type " << types->name << " which has not yet been defined!\n";
+      types->type = nullptr;
+    }
+    ++types;
+  }
+
+  _lock->unlock();
+}
+
+/**
  *
  */
 TypeRegistry::

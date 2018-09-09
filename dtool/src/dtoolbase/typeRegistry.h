@@ -82,6 +82,17 @@ PUBLISHED:
   MAKE_SEQ_PROPERTY(typehandles, get_num_typehandles, get_typehandle);
   MAKE_SEQ_PROPERTY(root_classes, get_num_root_classes, get_root_class);
 
+public:
+  void register_python_type(const char *name, PyObject *python_type,
+                            TypeHandle handle = TypeHandle::none());
+  PyObject *find_python_type(const std::string &name) const;
+
+  struct PythonTypeDef {
+    const char *const name;
+    PyObject *type;
+  };
+  void resolve_python_types(PythonTypeDef *types);
+
 private:
   // The TypeRegistry class should never be constructed by user code.  There
   // is only one in the universe, and it constructs itself!
@@ -108,6 +119,9 @@ private:
 
   typedef std::vector<TypeRegistryNode *> RootClasses;
   RootClasses _root_classes;
+
+  typedef std::map<std::string, PyObject *> PythonTypes;
+  PythonTypes _python_types;
 
   bool _derivations_fresh;
 

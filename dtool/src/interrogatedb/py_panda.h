@@ -190,12 +190,6 @@ static void Dtool_FreeInstance_##CLASS_NAME(PyObject *self) {\
 // forward declared of typed object.  We rely on the fact that typed objects
 // are uniquly defined by an integer.
 
-EXPCL_INTERROGATEDB void RegisterNamedClass(const std::string &name, Dtool_PyTypedObject &otype);
-EXPCL_INTERROGATEDB void RegisterRuntimeTypedClass(Dtool_PyTypedObject &otype);
-
-EXPCL_INTERROGATEDB Dtool_PyTypedObject *LookupNamedClass(const std::string &name);
-EXPCL_INTERROGATEDB Dtool_PyTypedObject *LookupRuntimeTypedClass(TypeHandle handle);
-
 EXPCL_INTERROGATEDB Dtool_PyTypedObject *Dtool_RuntimeTypeDtoolType(int type);
 
 /**
