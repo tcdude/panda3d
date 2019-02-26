@@ -94,6 +94,7 @@ protected:
   bool load_glyph(FT_Face face, int glyph_index, bool prerender = true);
   void copy_bitmap_to_pnmimage(const FT_Bitmap &bitmap, PNMImage &image);
   void render_distance_field(PNMImage &image, int radius, int min_x, int min_y);
+  void render_multi_distance_field(PNMImage &image, int radius, FT_Outline *outline, int min_x, int min_y);
 
   void decompose_outline(FT_Outline &outline);
 

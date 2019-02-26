@@ -113,8 +113,12 @@ string_render_mode(const string &string) {
     return RM_extruded;
   } else if (cmp_nocase_uh(string, "solid") == 0) {
     return RM_solid;
-  } else if (cmp_nocase_uh(string, "distance_field") == 0) {
+  } else if (cmp_nocase_uh(string, "distance_field") == 0 ||
+             cmp_nocase_uh(string, "sdf") == 0) {
     return RM_distance_field;
+  } else if (cmp_nocase_uh(string, "multi_distance_field") == 0 ||
+             cmp_nocase_uh(string, "msdf") == 0) {
+    return RM_multi_distance_field;
   } else {
     return RM_invalid;
   }
@@ -165,6 +169,8 @@ operator << (ostream &out, TextFont::RenderMode rm) {
     return out << "solid";
   case TextFont::RM_distance_field:
     return out << "distance-field";
+  case TextFont::RM_multi_distance_field:
+    return out << "multi-distance-field";
 
   case TextFont::RM_invalid:
     return out << "invalid";

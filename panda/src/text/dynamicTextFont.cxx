@@ -424,6 +424,12 @@ determine_tex_format() {
   _has_outline = (_outline_color != _bg && _outline_width > 0.0f);
   _needs_image_processing = true;
 
+  if (_render_mode == RM_multi_distance_field) {
+    _needs_image_processing = false;
+    _tex_format = Texture::F_rgb;
+    return;
+  }
+
   bool needs_color = false;
   bool needs_grayscale = false;
   bool needs_alpha = false;
@@ -554,6 +560,7 @@ make_glyph(int character, FT_Face face, int glyph_index) {
 
     case RM_texture:
     case RM_distance_field:
+    case RM_multi_distance_field:
     default:
       break;
     }
@@ -589,7 +596,13 @@ make_glyph(int character, FT_Face face, int glyph_index) {
     tex_y_size = (bounds.yMax - bounds.yMin) >> 6;
     tex_x_orig = (bounds.xMin >> 6);
     tex_y_orig = (bounds.yMax >> 6);
-    alpha_mode = TransparencyAttrib::M_binary;
+
+    if (_render_mode == RM_multi_distance_field) {
+      // We need a shader to render this anyway.
+      alpha_mode = TransparencyAttrib::M_alpha;
+    } else {
+      alpha_mode = TransparencyAttrib::M_binary;
+    }
   }
 
   if (tex_x_size == 0 || tex_y_size == 0) {
@@ -627,6 +640,28 @@ make_glyph(int character, FT_Face face, int glyph_index) {
         blend_pnmimage_to_texture(image, glyph, _fg);
       }
 
+    } else if (_render_mode == RM_multi_distance_field) {
+      tex_x_size /= _scale_factor;
+      tex_y_size /= _scale_factor;
+      int int_x_size = (int)ceil(tex_x_size);
+      int int_y_size = (int)ceil(tex_y_size);
+
+      outline = 4;
+      int_x_size += outline * 2;
+      int_y_size += outline * 2;
+      tex_x_size += outline * 2;
+      tex_y_size += outline * 2;
+
+      PNMImage image(int_x_size, int_y_size, PNMImage::CT_color);
+      render_multi_distance_field(image, outline, &slot->outline, bounds.xMin, bounds.yMin);
+
+      glyph = slot_glyph(character, int_x_size, int_y_size, advance);
+      if (!_needs_image_processing) {
+        copy_pnmimage_to_texture(image, glyph);
+      } else {
+        blend_pnmimage_to_texture(image, glyph, _fg);
+      }
+
     } else if (_tex_pixels_per_unit == _font_pixels_per_unit &&
                !_needs_image_processing) {
       // If the bitmap produced from the font doesn't require scaling or any
@@ -637,7 +672,7 @@ make_glyph(int character, FT_Face face, int glyph_index) {
 
     } else {
       // Otherwise, we need to copy to a PNMImage first, so we can scale it
-      // andor process it; and then copy it to the texture from there.
+      // and/or process it; and then copy it to the texture from there.
       tex_x_size /= _scale_factor;
       tex_y_size /= _scale_factor;
       int int_x_size = (int)ceil(tex_x_size);
@@ -785,12 +820,23 @@ void DynamicTextFont::
 copy_pnmimage_to_texture(const PNMImage &image, DynamicTextGlyph *glyph) {
   if (!_needs_image_processing) {
     // Copy the image directly into the alpha component of the texture.
-    nassertv(glyph->_page->get_num_components() == 1);
-    for (int yi = 0; yi < image.get_y_size(); yi++) {
-      unsigned char *texture_row = glyph->get_row(yi);
-      nassertv(texture_row != nullptr);
-      for (int xi = 0; xi < image.get_x_size(); xi++) {
-        texture_row[xi] = image.get_gray_val(xi, yi);
+    if (glyph->_page->get_num_components() == 1) {
+      for (int yi = 0; yi < image.get_y_size(); yi++) {
+        unsigned char *texture_row = glyph->get_row(yi);
+        nassertv(texture_row != nullptr);
+        for (int xi = 0; xi < image.get_x_size(); xi++) {
+          texture_row[xi] = image.get_gray_val(xi, yi);
+        }
+      }
+    } else if (glyph->_page->get_num_components() == 3) {
+      for (int yi = 0; yi < image.get_y_size(); yi++) {
+        unsigned char *texture_row = glyph->get_row(yi);
+        nassertv(texture_row != nullptr);
+        for (int xi = 0; xi < image.get_x_size(); xi++) {
+          *texture_row++ = image.get_blue_val(xi, yi);
+          *texture_row++ = image.get_green_val(xi, yi);
+          *texture_row++ = image.get_red_val(xi, yi);
+        }
       }
     }
 

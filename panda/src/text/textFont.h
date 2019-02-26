@@ -54,6 +54,7 @@ PUBLISHED:
     RM_solid,
 
     RM_distance_field,
+    RM_multi_distance_field,
 
     // Returned by string_render_mode() for an invalid match.
     RM_invalid,

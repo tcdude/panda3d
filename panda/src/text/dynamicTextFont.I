@@ -106,6 +106,9 @@ get_scale_factor() const {
  * At low resolutions, some fonts may do better with one mode or the other.
  * In general, Freetype's native antialiasing will produce less blurry
  * results, but may introduce more artifacts.
+ *
+ * When using signed-distance-field rendering, this instead controls whether
+ * antialiasing is enabled in the shader.
  */
 INLINE void DynamicTextFont::
 set_native_antialias(bool native_antialias) {
@@ -306,6 +309,7 @@ get_anisotropic_degree() const {
 INLINE void DynamicTextFont::
 set_render_mode(DynamicTextFont::RenderMode render_mode) {
   _render_mode = render_mode;
+  determine_tex_format();
 }
 
 /**
