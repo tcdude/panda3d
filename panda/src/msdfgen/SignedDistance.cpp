@@ -2,29 +2,30 @@
 #include "SignedDistance.h"
 
 #include <cmath>
+#include <limits>
 
-namespace msdfgen {
+const SignedDistance SignedDistance::INFINITE(-std::numeric_limits<PN_stdfloat>::max(), 1);
 
-const SignedDistance SignedDistance::INFINITE(-1e240, 1);
+SignedDistance::SignedDistance() : distance(-std::numeric_limits<PN_stdfloat>::max()), dot(1) { }
 
-SignedDistance::SignedDistance() : distance(-1e240), dot(1) { }
-
-SignedDistance::SignedDistance(double dist, double d) : distance(dist), dot(d) { }
+SignedDistance::SignedDistance(PN_stdfloat dist, PN_stdfloat d) : distance(dist), dot(d) { }
 
 bool operator<(SignedDistance a, SignedDistance b) {
-    return fabs(a.distance) < fabs(b.distance) || (fabs(a.distance) == fabs(b.distance) && a.dot < b.dot);
+  return fabs(a.distance) < fabs(b.distance)
+         || (fabs(a.distance) == fabs(b.distance) && a.dot < b.dot);
 }
 
 bool operator>(SignedDistance a, SignedDistance b) {
-    return fabs(a.distance) > fabs(b.distance) || (fabs(a.distance) == fabs(b.distance) && a.dot > b.dot);
+  return fabs(a.distance) > fabs(b.distance)
+         || (fabs(a.distance) == fabs(b.distance) && a.dot > b.dot);
 }
 
 bool operator<=(SignedDistance a, SignedDistance b) {
-    return fabs(a.distance) < fabs(b.distance) || (fabs(a.distance) == fabs(b.distance) && a.dot <= b.dot);
+  return fabs(a.distance) < fabs(b.distance)
+         || (fabs(a.distance) == fabs(b.distance) && a.dot <= b.dot);
 }
 
 bool operator>=(SignedDistance a, SignedDistance b) {
-    return fabs(a.distance) > fabs(b.distance) || (fabs(a.distance) == fabs(b.distance) && a.dot >= b.dot);
-}
-
+  return fabs(a.distance) > fabs(b.distance)
+         || (fabs(a.distance) == fabs(b.distance) && a.dot >= b.dot);
 }

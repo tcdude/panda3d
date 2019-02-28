@@ -46,6 +46,8 @@ PUBLISHED:
   INLINE_LINMATH FLOATNAME(LPoint2) operator * (FLOATTYPE scalar) const;
   INLINE_LINMATH FLOATNAME(LPoint2) operator / (FLOATTYPE scalar) const;
 
+  INLINE_LINMATH FLOATTYPE cross(const FLOATNAME(LVecBase2) &other) const;
+
 #ifndef FLOATTYPE_IS_INT
   INLINE_LINMATH FLOATNAME(LPoint2) normalized() const;
   INLINE_LINMATH FLOATNAME(LPoint2) project(const FLOATNAME(LVecBase2) &onto) const;

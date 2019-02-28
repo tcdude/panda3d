@@ -309,6 +309,15 @@ project(const FLOATNAME(LVecBase2) &onto) const {
 #endif  // FLOATTYPE_IS_INT
 
 /**
+ *
+ */
+INLINE_LINMATH FLOATTYPE FLOATNAME(LVecBase2)::
+cross(const FLOATNAME(LVecBase2) &other) const {
+  TAU_PROFILE("PN_stdfloat LVecBase2::cross()", " ", TAU_USER);
+  return (PN_stdfloat)(_v(0) * other._v(1) - other._v(0) * _v(1));
+}
+
+/**
  * This performs a lexicographical comparison.  It's of questionable
  * mathematical meaning, but sometimes has a practical purpose for sorting
  * unique vectors, especially in an STL container.  Also see compare_to().

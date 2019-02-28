@@ -43,6 +43,24 @@ dot(const FLOATNAME(LVecBase2) &a, const FLOATNAME(LVecBase2) &b) {
   return a.dot(b);
 }
 
+/**
+ *
+ */
+
+INLINE_LINMATH FLOATTYPE
+cross(const FLOATNAME(LVecBase2) &a, const FLOATNAME(LVecBase2) &b) {
+  return a.cross(b);
+}
+
+/**
+ *
+ */
+
+INLINE_LINMATH FLOATTYPE
+cross(const FLOATNAME(LVector2) &a, const FLOATNAME(LVector2) &b) {
+  return a.cross(b);
+}
+
 #ifndef FLOATTYPE_IS_INT
 /**
  *

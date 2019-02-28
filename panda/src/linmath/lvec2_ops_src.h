@@ -32,6 +32,13 @@ operator * (FLOATTYPE scalar, const FLOATNAME(LVector2) &a);
 INLINE_LINMATH FLOATTYPE
 dot(const FLOATNAME(LVecBase2) &a, const FLOATNAME(LVecBase2) &b);
 
+// cross product
+INLINE_LINMATH FLOATTYPE
+cross(const FLOATNAME(LVecBase2) &a, const FLOATNAME(LVecBase2) &b);
+
+INLINE_LINMATH FLOATTYPE
+cross(const FLOATNAME(LVector2) &a, const FLOATNAME(LVector2) &b);
+
 #ifndef FLOATTYPE_IS_INT
 // Length of a vector.
 INLINE_LINMATH FLOATTYPE

@@ -126,6 +126,14 @@ operator / (FLOATTYPE scalar) const {
   return FLOATNAME(LPoint2)(FLOATNAME(LVecBase2)::operator / (scalar));
 }
 
+/**
+ *
+ */
+INLINE_LINMATH FLOATTYPE FLOATNAME(LPoint2)::
+cross(const FLOATNAME(LVecBase2) &other) const {
+  return FLOATNAME(LVecBase2)::cross(other);
+}
+
 #ifndef FLOATTYPE_IS_INT
 /**
  * Normalizes the vector and returns the normalized vector as a copy.  If the

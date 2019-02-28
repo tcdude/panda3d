@@ -23,23 +23,22 @@
 #include "nurbsCurveResult.h"
 
 #include "../msdfgen/arithmetics.hpp"
-#include "../msdfgen/Vector2.h"
 #include "../msdfgen/Shape.h"
 #include "../msdfgen/edge-coloring.h"
 
 // Hack for now, either integrate properly into build system or replace with
 // our own math functions.
-#include "../msdfgen/Vector2.cpp"
 #include "../msdfgen/Shape.cpp"
-#include "../msdfgen/Contour.cpp"
+#include "../msdfgen/MSDFContour.cpp"
 #include "../msdfgen/SignedDistance.cpp"
 #include "../msdfgen/edge-segments.cpp"
 #include "../msdfgen/edge-coloring.cpp"
 #include "../msdfgen/EdgeHolder.cpp"
 #include "../msdfgen/equation-solver.cpp"
+#include <limits>
 
 
-static inline bool pixelClash(const LRGBColorf &a, const LRGBColorf &b, double threshold) {
+static inline bool pixelClash(const LRGBColorf &a, const LRGBColorf &b, PN_stdfloat threshold) {
   // Only consider pair where both are on the inside or both are on the outside
   bool aIn = (a[0] > .5f)+(a[1] > .5f)+(a[2] > .5f) >= 2;
   bool bIn = (b[0] > .5f)+(b[1] > .5f)+(b[2] > .5f) >= 2;
@@ -50,7 +49,7 @@ static inline bool pixelClash(const LRGBColorf &a, const LRGBColorf &b, double t
     return false;
   }
   // Find which color is which: _a, _b = the changing channels, _c = the remaining one
-  float aa, ab, ba, bb, ac, bc;
+  PN_stdfloat aa, ab, ba, bb, ac, bc;
   if ((a[0] > .5f) != (b[0] > .5f) && (a[0] < .5f) != (b[0] < .5f)) {
     aa = a[0], ba = b[0];
     if ((a[1] > .5f) != (b[1] > .5f) && (a[1] < .5f) != (b[1] < .5f)) {
@@ -71,9 +70,9 @@ static inline bool pixelClash(const LRGBColorf &a, const LRGBColorf &b, double t
     return false;
   }
   // Find if the channels are in fact discontinuous
-  return (fabsf(aa-ba) >= threshold)
-      && (fabsf(ab-bb) >= threshold)
-      && fabsf(ac-.5f) >= fabsf(bc-.5f); // Out of the pair, only flag the pixel farther from a shape edge
+  return (fabs(aa-ba) >= threshold)
+      && (fabs(ab-bb) >= threshold)
+      && fabs(ac-.5f) >= fabs(bc-.5f); // Out of the pair, only flag the pixel farther from a shape edge
 }
 
 #undef interface  // I don't know where this symbol is defined, but it interferes with FreeType.
@@ -580,52 +579,52 @@ render_distance_field(PNMImage &image, int outline, int min_x, int min_y) {
 void FreetypeFont::
 render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, int min_x, int min_y) {
   struct FtContext {
-    msdfgen::Point2 position;
-    msdfgen::Shape shape;
-    msdfgen::Contour *contour;
-    double scale;
+    LPoint2 position;
+    Shape shape;
+    MSDFContour *contour;
+    PN_stdfloat scale;
 
-    static msdfgen::Point2 ftPoint2(const FT_Vector &vector) {
-      return msdfgen::Point2(vector.x / (64.0), vector.y / (64.0));
+    static LPoint2 ftPoint2(const FT_Vector &vector) {
+      return LPoint2(vector.x / 64.0, vector.y / 64.0);
     }
 
     static int ftMoveTo(const FT_Vector *to, void *user) {
       FtContext *context = reinterpret_cast<FtContext *>(user);
-      context->contour = &context->shape.addContour();
+      context->contour = &context->shape.add_contour();
       context->position = ftPoint2(*to);
       return 0;
     }
 
     static int ftLineTo(const FT_Vector *to, void *user) {
       FtContext *context = reinterpret_cast<FtContext *>(user);
-      context->contour->addEdge(new msdfgen::LinearSegment(context->position, ftPoint2(*to)));
+      context->contour->add_edge(new LinearSegment(context->position, ftPoint2(*to)));
       context->position = ftPoint2(*to);
       return 0;
     }
 
     static int ftConicTo(const FT_Vector *control, const FT_Vector *to, void *user) {
       FtContext *context = reinterpret_cast<FtContext *>(user);
-      context->contour->addEdge(new msdfgen::QuadraticSegment(context->position, ftPoint2(*control), ftPoint2(*to)));
+      context->contour->add_edge(new QuadraticSegment(context->position, ftPoint2(*control), ftPoint2(*to)));
       context->position = ftPoint2(*to);
       return 0;
     }
 
     static int ftCubicTo(const FT_Vector *control1, const FT_Vector *control2, const FT_Vector *to, void *user) {
       FtContext *context = reinterpret_cast<FtContext *>(user);
-      context->contour->addEdge(new msdfgen::CubicSegment(context->position, ftPoint2(*control1), ftPoint2(*control2), ftPoint2(*to)));
+      context->contour->add_edge(new CubicSegment(context->position, ftPoint2(*control1), ftPoint2(*control2), ftPoint2(*to)));
       context->position = ftPoint2(*to);
       return 0;
     }
   } context = {};
 
   struct alignas(32) MultiDistance {
-    double r, g, b;
-    double med;
+    PN_stdfloat r, g, b;
+    PN_stdfloat med;
   };
 
   context.scale = 1.0 / (64.0 * _font_pixels_per_unit);
 
-  msdfgen::Shape &shape = context.shape;
+  Shape &shape = context.shape;
   shape.inverseYAxis = false;
 
   FT_Outline_Funcs ftFunctions;
@@ -637,17 +636,17 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
   ftFunctions.delta = 0;
   FT_Outline_Decompose(outline, &ftFunctions, &context);
 
-  edgeColoringSimple(shape, 3, 0);
+  edge_coloring_simple(shape, 3, 0);
 
   int contourCount = shape.contours.size();
   int w = image.get_x_size(), h = image.get_y_size();
   std::vector<int> windings;
   windings.reserve(contourCount);
-  for (msdfgen::Contour &contour : shape.contours) {
+  for (MSDFContour &contour : shape.contours) {
     windings.push_back(contour.winding());
   }
 
-  double range = pxrange / _tex_pixels_per_unit;
+  PN_stdfloat range = pxrange / _tex_pixels_per_unit;
   range *= _font_pixels_per_unit;
 
   PN_stdfloat offset_x = -pxrange / _tex_pixels_per_unit;
@@ -657,50 +656,50 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
   offset_y += min_y / (64.0f * _font_pixels_per_unit);
 
   std::cerr << "min x: " << min_x << ", min y: " << min_y << "\n";
-  msdfgen::Vector2 scale(_tex_pixels_per_unit, _tex_pixels_per_unit);
-  msdfgen::Vector2 translate(min_x / _tex_pixels_per_unit, min_y / _tex_pixels_per_unit);
+  LVector2 scale(_tex_pixels_per_unit, _tex_pixels_per_unit);
+  LVector2 translate(min_x / _tex_pixels_per_unit, min_y / _tex_pixels_per_unit);
 
   {
     std::vector<MultiDistance> contourSD;
     contourSD.resize(contourCount);
     for (int y = 0; y < h; ++y) {
-      int row = shape.inverseYAxis ? h-y-1 : y;
+      int row = shape.inverseYAxis ? h - y - 1 : y;
       for (int x = 0; x < w; ++x) {
-        //msdfgen::Point2 p = msdfgen::Vector2(x+.5, y+.5)/scale-translate;
-        msdfgen::Point2 p = msdfgen::Vector2(offset_x + (x / _tex_pixels_per_unit), offset_y - (y / _tex_pixels_per_unit)) * _font_pixels_per_unit;
+        //Point2 p = Vector2(x+.5, y+.5)/scale-translate;
+        LPoint2 p = LVector2(offset_x + (x / _tex_pixels_per_unit), offset_y - (y / _tex_pixels_per_unit)) * _font_pixels_per_unit;
 
         struct EdgePoint {
-          msdfgen::SignedDistance minDistance;
-          const msdfgen::EdgeHolder *nearEdge;
-          double nearParam;
+          SignedDistance minDistance;
+          const EdgeHolder *nearEdge;
+          PN_stdfloat nearParam;
         } sr, sg, sb;
         sr.nearEdge = sg.nearEdge = sb.nearEdge = nullptr;
         sr.nearParam = sg.nearParam = sb.nearParam = 0;
-        double d = 1e240;
-        double negDist = 1e240;
-        double posDist = -1e240;
+        PN_stdfloat d = 1e240;
+        PN_stdfloat negDist = 1e240;
+        PN_stdfloat posDist = -1e240;
         int winding = 0;
 
-        std::vector<msdfgen::Contour>::const_iterator contour = shape.contours.begin();
+        std::vector<MSDFContour>::const_iterator contour = shape.contours.begin();
         for (int i = 0; i < contourCount; ++i, ++contour) {
           EdgePoint r, g, b;
           r.nearEdge = g.nearEdge = b.nearEdge = nullptr;
           r.nearParam = g.nearParam = b.nearParam = 0;
 
-          for (const msdfgen::EdgeHolder &edge : contour->edges) {
-            double param;
-            msdfgen::SignedDistance distance = edge->signedDistance(p, param);
-            if (edge->color&msdfgen::RED && distance < r.minDistance) {
+          for (const EdgeHolder &edge : contour->edges) {
+            PN_stdfloat param;
+            SignedDistance distance = edge->signed_distance(p, param);
+            if (edge->color&RED && distance < r.minDistance) {
               r.minDistance = distance;
               r.nearEdge = &edge;
               r.nearParam = param;
             }
-            if (edge->color&msdfgen::GREEN && distance < g.minDistance) {
+            if (edge->color&GREEN && distance < g.minDistance) {
               g.minDistance = distance;
               g.nearEdge = &edge;
               g.nearParam = param;
             }
-            if (edge->color&msdfgen::BLUE && distance < b.minDistance) {
+            if (edge->color&BLUE && distance < b.minDistance) {
               b.minDistance = distance;
               b.nearEdge = &edge;
               b.nearParam = param;
@@ -716,21 +715,21 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
             sb = b;
           }
 
-          double medMinDistance = fabs(msdfgen::median(r.minDistance.distance, g.minDistance.distance, b.minDistance.distance));
+          PN_stdfloat medMinDistance = fabs(msdf::median(r.minDistance.distance, g.minDistance.distance, b.minDistance.distance));
           if (medMinDistance < d) {
             d = medMinDistance;
             winding = -windings[i];
           }
           if (r.nearEdge) {
-            (*r.nearEdge)->distanceToPseudoDistance(r.minDistance, p, r.nearParam);
+            (*r.nearEdge)->distance_to_pseudo_distance(r.minDistance, p, r.nearParam);
           }
           if (g.nearEdge) {
-            (*g.nearEdge)->distanceToPseudoDistance(g.minDistance, p, g.nearParam);
+            (*g.nearEdge)->distance_to_pseudo_distance(g.minDistance, p, g.nearParam);
           }
           if (b.nearEdge) {
-            (*b.nearEdge)->distanceToPseudoDistance(b.minDistance, p, b.nearParam);
+            (*b.nearEdge)->distance_to_pseudo_distance(b.minDistance, p, b.nearParam);
           }
-          medMinDistance = msdfgen::median(r.minDistance.distance, g.minDistance.distance, b.minDistance.distance);
+          medMinDistance = msdf::median(r.minDistance.distance, g.minDistance.distance, b.minDistance.distance);
           contourSD[i].r = r.minDistance.distance;
           contourSD[i].g = g.minDistance.distance;
           contourSD[i].b = b.minDistance.distance;
@@ -741,19 +740,19 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
             negDist = medMinDistance;
         }
         if (sr.nearEdge) {
-          (*sr.nearEdge)->distanceToPseudoDistance(sr.minDistance, p, sr.nearParam);
+          (*sr.nearEdge)->distance_to_pseudo_distance(sr.minDistance, p, sr.nearParam);
         }
         if (sg.nearEdge) {
-          (*sg.nearEdge)->distanceToPseudoDistance(sg.minDistance, p, sg.nearParam);
+          (*sg.nearEdge)->distance_to_pseudo_distance(sg.minDistance, p, sg.nearParam);
         }
         if (sb.nearEdge) {
-          (*sb.nearEdge)->distanceToPseudoDistance(sb.minDistance, p, sb.nearParam);
+          (*sb.nearEdge)->distance_to_pseudo_distance(sb.minDistance, p, sb.nearParam);
         }
 
         MultiDistance msd;
-        msd.r = msd.g = msd.b = msd.med = -1e240;
+        msd.r = msd.g = msd.b = msd.med = -std::numeric_limits<PN_stdfloat>::max();
         if (posDist >= 0 && fabs(posDist) <= fabs(negDist)) {
-          msd.med = -1e240;
+          msd.med = -std::numeric_limits<PN_stdfloat>::max();
           winding = 1;
           for (int i = 0; i < contourCount; ++i) {
             if (windings[i] > 0 && contourSD[i].med > msd.med && fabs(contourSD[i].med) < fabs(negDist)) {
@@ -761,7 +760,7 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
             }
           }
         } else if (negDist <= 0 && fabs(negDist) <= fabs(posDist)) {
-          msd.med = 1e240;
+          msd.med = std::numeric_limits<PN_stdfloat>::max();
           winding = -1;
           for (int i = 0; i < contourCount; ++i) {
             if (windings[i] < 0 && contourSD[i].med < msd.med && fabs(contourSD[i].med) < fabs(posDist)) {
@@ -774,7 +773,7 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
             msd = contourSD[i];
           }
         }
-        if (msdfgen::median(sr.minDistance.distance, sg.minDistance.distance, sb.minDistance.distance) == msd.med) {
+        if (msdf::median(sr.minDistance.distance, sg.minDistance.distance, sb.minDistance.distance) == msd.med) {
           msd.r = sr.minDistance.distance;
           msd.g = sg.minDistance.distance;
           msd.b = sb.minDistance.distance;
@@ -787,24 +786,24 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
   }
 
   // Perform error correction (originally msdfErrorCorrection function)
-  double edge_threshold = 1.00000001;
-  double threshold_x = edge_threshold / pxrange;
-  double threshold_y = edge_threshold / pxrange;
+  PN_stdfloat edge_threshold = 1.00000001;
+  PN_stdfloat threshold_x = edge_threshold / pxrange;
+  PN_stdfloat threshold_y = edge_threshold / pxrange;
 
   std::vector<std::pair<int, int> > clashes;
   for (int y = 0; y < h; ++y) {
     for (int x = 0; x < w; ++x) {
-      if ((x > 0 && pixelClash(image.get_xel(x, y), image.get_xel(x-1, y), threshold_x))
-         || (x < w-1 && pixelClash(image.get_xel(x, y), image.get_xel(x+1, y), threshold_x))
-         || (y > 0 && pixelClash(image.get_xel(x, y), image.get_xel(x, y-1), threshold_y))
-         || (y < h-1 && pixelClash(image.get_xel(x, y), image.get_xel(x, y+1), threshold_y))) {
+      if ((x > 0 && pixelClash(image.get_xel(x, y), image.get_xel(x - 1, y), threshold_x))
+         || (x < w - 1 && pixelClash(image.get_xel(x, y), image.get_xel(x + 1, y), threshold_x))
+         || (y > 0 && pixelClash(image.get_xel(x, y), image.get_xel(x, y - 1), threshold_y))
+         || (y < h - 1 && pixelClash(image.get_xel(x, y), image.get_xel(x, y + 1), threshold_y))) {
         clashes.push_back(std::make_pair(x, y));
       }
     }
   }
   for (std::pair<int, int> &clash : clashes) {
-    LRGBColor pixel = image.get_xel(clash.first, clash.second);
-    float med = msdfgen::median(pixel[0], pixel[1], pixel[2]);
+    LRGBColorf pixel = image.get_xel(clash.first, clash.second);
+    PN_stdfloat med = msdf::median(pixel[0], pixel[1], pixel[2]);
     pixel[0] = med;
     pixel[1] = med;
     pixel[2] = med;

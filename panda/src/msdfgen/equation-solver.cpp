@@ -1,12 +1,9 @@
-
 #include "equation-solver.h"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-namespace msdfgen {
-
-int solveQuadratic(double x[2], double a, double b, double c) {
+int solve_quadratic(PN_stdfloat x[2], PN_stdfloat a, PN_stdfloat b, PN_stdfloat c) {
     if (fabs(a) < 1e-14) {
         if (fabs(b) < 1e-14) {
             if (c == 0)
@@ -16,7 +13,7 @@ int solveQuadratic(double x[2], double a, double b, double c) {
         x[0] = -c/b;
         return 1;
     }
-    double dscr = b*b-4*a*c;
+    PN_stdfloat dscr = b*b-4*a*c;
     if (dscr > 0) {
         dscr = sqrt(dscr);
         x[0] = (-b+dscr)/(2*a);
@@ -29,15 +26,21 @@ int solveQuadratic(double x[2], double a, double b, double c) {
         return 0;
 }
 
-int solveCubicNormed(double *x, double a, double b, double c) {
-    double a2 = a*a;
-    double q  = (a2 - 3*b)/9; 
-    double r  = (a*(2*a2-9*b) + 27*c)/54;
-    double r2 = r*r;
-    double q3 = q*q*q;
-    double A, B;
+int solve_cubic(PN_stdfloat x[3], PN_stdfloat a, PN_stdfloat b, PN_stdfloat c, PN_stdfloat d) {
+    if (fabs(a) < 1e-14)
+        return solve_quadratic(x, b, c, d);
+    return solve_cubic_normed(x, b/a, c/a, d/a);
+}
+
+int solve_cubic_normed(PN_stdfloat *x, PN_stdfloat a, PN_stdfloat b, PN_stdfloat c) {
+    PN_stdfloat a2 = a*a;
+    PN_stdfloat q  = (a2 - 3*b)/9;
+    PN_stdfloat r  = (a*(2*a2-9*b) + 27*c)/54;
+    PN_stdfloat r2 = r*r;
+    PN_stdfloat q3 = q*q*q;
+    PN_stdfloat A, B;
     if (r2 < q3) {
-        double t = r/sqrt(q3);
+        PN_stdfloat t = r/sqrt(q3);
         if (t < -1) t = -1;
         if (t > 1) t = 1;
         t = acos(t);
@@ -47,7 +50,7 @@ int solveCubicNormed(double *x, double a, double b, double c) {
         x[2] = q*cos((t-2*M_PI)/3)-a;
         return 3;
     } else {
-        A = -pow(fabs(r)+sqrt(r2-q3), 1/3.); 
+        A = -pow(fabs(r)+sqrt(r2-q3), 1/3.);
         if (r < 0) A = -A;
         B = A == 0 ? 0 : q/A;
         a /= 3;
@@ -58,12 +61,4 @@ int solveCubicNormed(double *x, double a, double b, double c) {
             return 2;
         return 1;
     }
-}
-
-int solveCubic(double x[3], double a, double b, double c, double d) {
-    if (fabs(a) < 1e-14)
-        return solveQuadratic(x, b, c, d);
-    return solveCubicNormed(x, b/a, c/a, d/a);
-}
-
 }

@@ -1,11 +1,9 @@
-
 #pragma once
 
-#include "Vector2.h"
+#include "aa_luse.h"
 #include "SignedDistance.h"
 #include "EdgeColor.h"
 
-namespace msdfgen {
 
 // Parameters for iterative search of closest point on a cubic Bezier curve. Increase for higher precision.
 #define MSDFGEN_CUBIC_SEARCH_STARTS 4
@@ -15,29 +13,29 @@ namespace msdfgen {
 class EdgeSegment {
 
 public:
-    EdgeColor color;
+  EdgeColor color;
 
-    EdgeSegment(EdgeColor edgeColor = WHITE) : color(edgeColor) { }
-    virtual ~EdgeSegment() { }
-    /// Creates a copy of the edge segment.
-    virtual EdgeSegment * clone() const = 0;
-    /// Returns the point on the edge specified by the parameter (between 0 and 1).
-    virtual Point2 point(double param) const = 0;
-    /// Returns the direction the edge has at the point specified by the parameter.
-    virtual Vector2 direction(double param) const = 0;
-    /// Returns the minimum signed distance between origin and the edge.
-    virtual SignedDistance signedDistance(Point2 origin, double &param) const = 0;
-    /// Converts a previously retrieved signed distance from origin to pseudo-distance.
-    virtual void distanceToPseudoDistance(SignedDistance &distance, Point2 origin, double param) const;
-    /// Adjusts the bounding box to fit the edge segment.
-    virtual void bounds(double &l, double &b, double &r, double &t) const = 0;
+  EdgeSegment(EdgeColor edge_color = WHITE) : color(edge_color) { }
+  virtual ~EdgeSegment() { }
+  /// Creates a copy of the edge segment.
+  virtual EdgeSegment *clone() const = 0;
+  /// Returns the point on the edge specified by the parameter (between 0 and 1).
+  virtual LPoint2 point(PN_stdfloat param) const = 0;
+  /// Returns the direction the edge has at the point specified by the parameter.
+  virtual LVector2 direction(PN_stdfloat param) const = 0;
+  /// Returns the minimum signed distance between origin and the edge.
+  virtual SignedDistance signed_distance(LPoint2 origin, PN_stdfloat &param) const = 0;
+  /// Converts a previously retrieved signed distance from origin to pseudo-distance.
+  virtual void distance_to_pseudo_distance(SignedDistance &distance, LPoint2 origin, PN_stdfloat param) const;
+  /// Adjusts the bounding box to fit the edge segment.
+  virtual void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const = 0;
 
-    /// Moves the start point of the edge segment.
-    virtual void moveStartPoint(Point2 to) = 0;
-    /// Moves the end point of the edge segment.
-    virtual void moveEndPoint(Point2 to) = 0;
-    /// Splits the edge segments into thirds which together represent the original edge.
-    virtual void splitInThirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const = 0;
+  /// Moves the start point of the edge segment.
+  virtual void move_start_point(LPoint2 to) = 0;
+  /// Moves the end point of the edge segment.
+  virtual void move_end_point(LPoint2 to) = 0;
+  /// Splits the edge segments into thirds which together represent the original edge.
+  virtual void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const = 0;
 
 };
 
@@ -45,18 +43,18 @@ public:
 class LinearSegment : public EdgeSegment {
 
 public:
-    Point2 p[2];
+  LPoint2 p[2];
 
-    LinearSegment(Point2 p0, Point2 p1, EdgeColor edgeColor = WHITE);
-    LinearSegment * clone() const;
-    Point2 point(double param) const;
-    Vector2 direction(double param) const;
-    SignedDistance signedDistance(Point2 origin, double &param) const;
-    void bounds(double &l, double &b, double &r, double &t) const;
+  LinearSegment(LPoint2 p0, LPoint2 p1, EdgeColor edge_color = WHITE);
+  LinearSegment * clone() const;
+  LPoint2 point(PN_stdfloat param) const;
+  LVector2 direction(PN_stdfloat param) const;
+  SignedDistance signed_distance(LPoint2 origin, PN_stdfloat &param) const;
+  void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const;
 
-    void moveStartPoint(Point2 to);
-    void moveEndPoint(Point2 to);
-    void splitInThirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
+  void move_start_point(LPoint2 to);
+  void move_end_point(LPoint2 to);
+  void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
 
 };
 
@@ -64,18 +62,18 @@ public:
 class QuadraticSegment : public EdgeSegment {
 
 public:
-    Point2 p[3];
+  LPoint2 p[3];
 
-    QuadraticSegment(Point2 p0, Point2 p1, Point2 p2, EdgeColor edgeColor = WHITE);
-    QuadraticSegment * clone() const;
-    Point2 point(double param) const;
-    Vector2 direction(double param) const;
-    SignedDistance signedDistance(Point2 origin, double &param) const;
-    void bounds(double &l, double &b, double &r, double &t) const;
+  QuadraticSegment(LPoint2 p0, LPoint2 p1, LPoint2 p2, EdgeColor edge_color = WHITE);
+  QuadraticSegment * clone() const;
+  LPoint2 point(PN_stdfloat param) const;
+  LVector2 direction(PN_stdfloat param) const;
+  SignedDistance signed_distance(LPoint2 origin, PN_stdfloat &param) const;
+  void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const;
 
-    void moveStartPoint(Point2 to);
-    void moveEndPoint(Point2 to);
-    void splitInThirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
+  void move_start_point(LPoint2 to);
+  void move_end_point(LPoint2 to);
+  void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
 
 };
 
@@ -83,19 +81,17 @@ public:
 class CubicSegment : public EdgeSegment {
 
 public:
-    Point2 p[4];
+  LPoint2 p[4];
 
-    CubicSegment(Point2 p0, Point2 p1, Point2 p2, Point2 p3, EdgeColor edgeColor = WHITE);
-    CubicSegment * clone() const;
-    Point2 point(double param) const;
-    Vector2 direction(double param) const;
-    SignedDistance signedDistance(Point2 origin, double &param) const;
-    void bounds(double &l, double &b, double &r, double &t) const;
+  CubicSegment(LPoint2 p0, LPoint2 p1, LPoint2 p2, LPoint2 p3, EdgeColor edge_color = WHITE);
+  CubicSegment * clone() const;
+  LPoint2 point(PN_stdfloat param) const;
+  LVector2 direction(PN_stdfloat param) const;
+  SignedDistance signed_distance(LPoint2 origin, PN_stdfloat &param) const;
+  void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const;
 
-    void moveStartPoint(Point2 to);
-    void moveEndPoint(Point2 to);
-    void splitInThirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
+  void move_start_point(LPoint2 to);
+  void move_end_point(LPoint2 to);
+  void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
 
 };
-
-}

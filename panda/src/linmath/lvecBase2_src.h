@@ -89,6 +89,7 @@ PUBLISHED:
 
   INLINE_LINMATH FLOATTYPE dot(const FLOATNAME(LVecBase2) &other) const;
   INLINE_LINMATH FLOATTYPE length_squared() const;
+  INLINE_LINMATH FLOATTYPE cross(const FLOATNAME(LVecBase2) &other) const;
 
 #ifndef FLOATTYPE_IS_INT
   INLINE_LINMATH FLOATTYPE length() const;

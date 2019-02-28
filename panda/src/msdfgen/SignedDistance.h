@@ -1,25 +1,21 @@
 
 #pragma once
 
-namespace msdfgen {
-
 /// Represents a signed distance and alignment, which together can be compared to uniquely determine the closest edge segment.
 class SignedDistance {
 
 public:
-    static const SignedDistance INFINITE;
+  static const SignedDistance INFINITE;
 
-    double distance;
-    double dot;
+  PN_stdfloat distance;
+  PN_stdfloat dot;
 
-    SignedDistance();
-    SignedDistance(double dist, double d);
+  SignedDistance();
+  SignedDistance(PN_stdfloat dist, PN_stdfloat d);
 
-    friend bool operator<(SignedDistance a, SignedDistance b);
-    friend bool operator>(SignedDistance a, SignedDistance b);
-    friend bool operator<=(SignedDistance a, SignedDistance b);
-    friend bool operator>=(SignedDistance a, SignedDistance b);
+  friend bool operator<(SignedDistance a, SignedDistance b);
+  friend bool operator>(SignedDistance a, SignedDistance b);
+  friend bool operator<=(SignedDistance a, SignedDistance b);
+  friend bool operator>=(SignedDistance a, SignedDistance b);
 
 };
-
-}

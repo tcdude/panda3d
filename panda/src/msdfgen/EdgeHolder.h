@@ -3,17 +3,15 @@
 
 #include "edge-segments.h"
 
-namespace msdfgen {
-
 /// Container for a single edge of dynamic type.
 class EdgeHolder {
 
 public:
     EdgeHolder();
     EdgeHolder(EdgeSegment *segment);
-    EdgeHolder(Point2 p0, Point2 p1, EdgeColor edgeColor = WHITE);
-    EdgeHolder(Point2 p0, Point2 p1, Point2 p2, EdgeColor edgeColor = WHITE);
-    EdgeHolder(Point2 p0, Point2 p1, Point2 p2, Point2 p3, EdgeColor edgeColor = WHITE);
+    EdgeHolder(LPoint2 p0, LPoint2 p1, EdgeColor edge_color = WHITE);
+    EdgeHolder(LPoint2 p0, LPoint2 p1, LPoint2 p2, EdgeColor edge_color = WHITE);
+    EdgeHolder(LPoint2 p0, LPoint2 p1, LPoint2 p2, LPoint2 p3, EdgeColor edge_color = WHITE);
     EdgeHolder(const EdgeHolder &orig);
 #ifdef MSDFGEN_USE_CPP11
     EdgeHolder(EdgeHolder &&orig);
@@ -31,8 +29,6 @@ public:
     operator const EdgeSegment *() const;
 
 private:
-    EdgeSegment *edgeSegment;
+    EdgeSegment *edge_segment;
 
 };
-
-}
