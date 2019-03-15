@@ -526,7 +526,8 @@ render_distance_field(PNMImage &image, int outline, int min_x, int min_y) {
  * contours.
  */
 void FreetypeFont::
-render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, int min_x, int min_y) {
+render_multi_distance_field(PNMImage &image, PN_stdfloat pxrange,
+                            FT_Outline *outline, int min_x, int min_y) {
   struct FtContext {
     LPoint2 position;
     MSDFGen::Shape shape;
@@ -601,8 +602,8 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
   PN_stdfloat offset_x = -pxrange / _tex_pixels_per_unit;
   PN_stdfloat offset_y = (image.get_y_size() - 1 - pxrange) / _tex_pixels_per_unit;
 
-  offset_x += min_x / (64.0f * _font_pixels_per_unit);
-  offset_y += min_y / (64.0f * _font_pixels_per_unit);
+  offset_x += min_x / (64.0 * _font_pixels_per_unit);
+  offset_y += min_y / (64.0 * _font_pixels_per_unit);
 
   // std::cerr << "min x: " << min_x << ", min y: " << min_y << "\n";
   LVector2 scale(_tex_pixels_per_unit, _tex_pixels_per_unit);
@@ -624,9 +625,9 @@ render_multi_distance_field(PNMImage &image, int pxrange, FT_Outline *outline, i
         } sr, sg, sb;
         sr.nearEdge = sg.nearEdge = sb.nearEdge = nullptr;
         sr.nearParam = sg.nearParam = sb.nearParam = 0;
-        PN_stdfloat d = 1e240;
-        PN_stdfloat negDist = 1e240;
-        PN_stdfloat posDist = -1e240;
+        PN_stdfloat d = std::numeric_limits<PN_stdfloat>::max();
+        PN_stdfloat negDist = std::numeric_limits<PN_stdfloat>::max();
+        PN_stdfloat posDist = -std::numeric_limits<PN_stdfloat>::max();
         int winding = 0;
 
         std::vector<MSDFGen::Contour>::const_iterator contour = shape.contours.begin();

@@ -16,11 +16,6 @@
 
 #ifdef HAVE_FREETYPE
 
-// Parameters for iterative search of closest point on a cubic Bezier curve.
-// Increase for higher precision.
-#define MSDFGEN_CUBIC_SEARCH_STARTS 4
-#define MSDFGEN_CUBIC_SEARCH_STEPS 4
-
 #include "luse.h"
 #include <limits>
 #include <cstdlib>
@@ -221,7 +216,7 @@ public:
   class SignedDistance {
 
   public:
-    static const SignedDistance INFINITE;
+    //static const SignedDistance INFINITE;
 
     PN_stdfloat distance;
     PN_stdfloat dot;

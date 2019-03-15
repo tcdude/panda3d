@@ -18,6 +18,7 @@
 #include "notifyCategoryProxy.h"
 #include "configVariableDouble.h"
 #include "configVariableBool.h"
+#include "configVariableInt.h"
 
 class DSearchPath;
 
@@ -27,6 +28,8 @@ extern ConfigVariableDouble text_point_size;
 extern ConfigVariableDouble text_pixels_per_unit;
 extern ConfigVariableDouble text_scale_factor;
 extern ConfigVariableBool text_native_antialias;
+extern ConfigVariableInt msdf_cubic_search_starts;
+extern ConfigVariableInt msdf_cubic_search_steps;
 
 extern EXPCL_PANDA_PNMTEXT void init_libpnmtext();
 

@@ -110,7 +110,7 @@ INLINE void point_bounds(LPoint2 p, PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat 
 }
 
 /**
- * Is here because there was a noticable performance drop w/o INLINE
+ * Is here because there seemed to be a noticable performance drop w/o INLINE
  */
 INLINE bool pixel_clash(const LRGBColorf &a, const LRGBColorf &b, PN_stdfloat threshold) {
   // Only consider pair where both are on the inside or both are on the outside
