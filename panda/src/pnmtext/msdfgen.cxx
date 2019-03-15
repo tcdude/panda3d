@@ -358,8 +358,8 @@ signed_distance(LPoint2 origin, PN_stdfloat &param) const {
     }
   }
   // Iterative minimum distance search
-  for (int i = 0; i <= msdf_cubic_search_starts; ++i) {
-    PN_stdfloat t = (PN_stdfloat) i / msdf_cubic_search_starts;
+  for (int i = 0; i <= text_msdf_cubic_search_starts; ++i) {
+    PN_stdfloat t = (PN_stdfloat) i / text_msdf_cubic_search_starts;
     for (int step = 0;; ++step) {
       LVector2 qpt = point(t) - origin;
       PN_stdfloat distance = non_zero_sign(cross(direction(t), qpt)) * qpt.length();
@@ -367,7 +367,7 @@ signed_distance(LPoint2 origin, PN_stdfloat &param) const {
         min_distance = distance;
         param = t;
       }
-      if (step == msdf_cubic_search_steps) {
+      if (step == text_msdf_cubic_search_steps) {
         break;
       }
       // Improve t

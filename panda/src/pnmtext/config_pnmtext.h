@@ -28,8 +28,9 @@ extern ConfigVariableDouble text_point_size;
 extern ConfigVariableDouble text_pixels_per_unit;
 extern ConfigVariableDouble text_scale_factor;
 extern ConfigVariableBool text_native_antialias;
-extern ConfigVariableInt msdf_cubic_search_starts;
-extern ConfigVariableInt msdf_cubic_search_steps;
+extern ConfigVariableInt text_msdf_cubic_search_starts;
+extern ConfigVariableInt text_msdf_cubic_search_steps;
+extern ConfigVariableDouble text_msdf_edge_threshold;
 
 extern EXPCL_PANDA_PNMTEXT void init_libpnmtext();
 

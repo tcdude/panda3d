@@ -35,14 +35,17 @@ ConfigVariableDouble text_scale_factor
 ("text-scale-factor", 2.0);
 ConfigVariableBool text_native_antialias
 ("text-native-antialias", true);
-ConfigVariableInt msdf_cubic_search_starts
-("msdf-cubic-search-starts", 4,
+ConfigVariableInt text_msdf_cubic_search_starts
+("text-msdf-cubic-search-starts", 4,
  PRC_DESC("Increase for higher precision in iterative search for closest point"
           "on a cubic Bezier curve."));
-ConfigVariableInt msdf_cubic_search_steps
-("msdf-cubic-search-steps", 4,
+ConfigVariableInt text_msdf_cubic_search_steps
+("text-msdf-cubic-search-steps", 4,
  PRC_DESC("Increase for higher precision in iterative search for closest point"
           "on a cubic Bezier curve."));
+ConfigVariableDouble text_msdf_edge_threshold
+("text-msdf-cubic-search-steps", 1.00000001,
+ PRC_DESC("Threshold value to perform error correction in MSDF generation."));
 
 /**
  * Initializes the library.  This must be called at least once before any of

@@ -736,7 +736,7 @@ render_multi_distance_field(PNMImage &image, PN_stdfloat pxrange,
   }
 
   // Perform error correction (originally msdfErrorCorrection function)
-  PN_stdfloat edge_threshold = 1.00000001;
+  PN_stdfloat edge_threshold = text_msdf_edge_threshold;
   PN_stdfloat threshold_x = edge_threshold / pxrange;
   PN_stdfloat threshold_y = edge_threshold / pxrange;
 
