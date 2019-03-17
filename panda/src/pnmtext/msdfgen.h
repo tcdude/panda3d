@@ -34,11 +34,8 @@ enum EdgeColor {
 };
 
 INLINE LVector2 normalize_non_zero(const LVector2 &v);
-INLINE LPoint2 min(const LPoint2 &a, const LPoint2 &b);
-INLINE LPoint2 max(const LPoint2 &a, const LPoint2 &b);
 INLINE PN_stdfloat median(PN_stdfloat a, PN_stdfloat b, PN_stdfloat c);
 INLINE LPoint2 mix(const LPoint2 &a, const LPoint2 &b, PN_stdfloat weight);
-INLINE PN_stdfloat sign(PN_stdfloat n);
 INLINE int non_zero_sign(PN_stdfloat n);
 INLINE bool is_corner(const LVector2 &a_dir, const LVector2 &b_dir, PN_stdfloat cross_threshold);
 INLINE void switch_color(EdgeColor &color, unsigned long long &seed, EdgeColor banned = BLACK);
@@ -77,7 +74,6 @@ public:
     bool inverseYAxis;
 
     Shape();
-    INLINE void add_contour(const Contour &contour);
     INLINE Contour& add_contour();
     void normalize();
     bool validate() const;
@@ -101,8 +97,6 @@ public:
     virtual void distance_to_pseudo_distance(SignedDistance &distance, LPoint2 origin, PN_stdfloat param) const;
     virtual void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const = 0;
 
-    virtual void move_start_point(LPoint2 to) = 0;
-    virtual void move_end_point(LPoint2 to) = 0;
     virtual void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const = 0;
 
   };
@@ -122,8 +116,6 @@ public:
     SignedDistance signed_distance(LPoint2 origin, PN_stdfloat &param) const;
     INLINE void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const;
 
-    INLINE void move_start_point(LPoint2 to);
-    INLINE void move_end_point(LPoint2 to);
     INLINE void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
 
   };
@@ -143,8 +135,6 @@ public:
     SignedDistance signed_distance(LPoint2 origin, PN_stdfloat &param) const;
     void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const;
 
-    void move_start_point(LPoint2 to);
-    void move_end_point(LPoint2 to);
     INLINE void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
 
   };
@@ -164,8 +154,6 @@ public:
     SignedDistance signed_distance(LPoint2 origin, PN_stdfloat &param) const;
     void bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const;
 
-    INLINE void move_start_point(LPoint2 to);
-    INLINE void move_end_point(LPoint2 to);
     void split_in_thirds(EdgeSegment *&part1, EdgeSegment *&part2, EdgeSegment *&part3) const;
 
   };
@@ -216,8 +204,6 @@ public:
   class SignedDistance {
 
   public:
-    //static const SignedDistance INFINITE;
-
     PN_stdfloat distance;
     PN_stdfloat dot;
 

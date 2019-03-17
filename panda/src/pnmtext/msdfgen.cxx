@@ -444,34 +444,6 @@ bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const {
 }
 
 /**
- * Moves the start point of the edge segment.
- */
-void MSDFGen::QuadraticSegment::
-move_start_point(LPoint2 to) {
-  LVector2 orig_s_dir = p[0] - p[1];
-  LPoint2 orig_p1 = p[1];
-  p[1] += cross(p[0] - p[1], to - p[0]) / cross(p[0] - p[1], p[2] - p[1]) * (p[2] - p[1]);
-  p[0] = to;
-  if (dot(orig_s_dir, p[0] - p[1]) < 0) {
-    p[1] = orig_p1;
-  }
-}
-
-/**
- * Moves the end point of the edge segment.
- */
-void MSDFGen::QuadraticSegment::
-move_end_point(LPoint2 to) {
-  LVector2 orig_e_dir = p[2] - p[1];
-  LPoint2 orig_p1 = p[1];
-  p[1] += cross(p[2] - p[1], to - p[2]) / cross(p[2] - p[1], p[0] - p[1]) * (p[0] - p[1]);
-  p[2] = to;
-  if (dot(orig_e_dir, p[2] - p[1]) < 0) {
-    p[1] = orig_p1;
-  }
-}
-
-/**
  * Splits the edge segments into thirds which together represent the original edge.
  */
 void MSDFGen::CubicSegment::
@@ -524,10 +496,7 @@ winding() const {
       prev = cur;
     }
   }
-  return sign(total);
+  return (0 < total) - (total < 0);
 }
-
-// const MSDFGen::SignedDistance INFINITE(-std::numeric_limits<PN_stdfloat>::max(), 1);
-// const MSDFGen::SignedDistance MSDFGen::SignedDistance::INFINITE(-1e38, 1);
 
 #endif // HAVE_FREETYPE

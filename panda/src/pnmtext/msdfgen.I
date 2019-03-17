@@ -23,20 +23,6 @@ INLINE LVector2 normalize_non_zero(const LVector2 &v) {
 }
 
 /**
- * Returns the smaller of the arguments.
- */
-INLINE LPoint2 min (const LPoint2 &a, const LPoint2 &b) {
-  return b < a ? b : a;
-}
-
-/**
- * Returns the larger of the arguments.
- */
-INLINE LPoint2 max (const LPoint2 &a, const LPoint2 &b) {
-  return a < b ? b : a;
-}
-
-/**
  * Returns the middle out of three values.
  */
 INLINE PN_stdfloat median(PN_stdfloat a, PN_stdfloat b, PN_stdfloat c) {
@@ -51,13 +37,6 @@ INLINE LPoint2 mix (const LPoint2 &a, const LPoint2 &b, PN_stdfloat weight) {
 }
 
 /**
- * Returns 1 for positive values, -1 for negative values, and 0 for zero.
- */
-INLINE PN_stdfloat sign(PN_stdfloat n) {
-    return (0 < n) - (n < 0);
-}
-
-/**
  * Returns 1 for non-negative values and -1 for negative values.
  */
 INLINE int non_zero_sign(PN_stdfloat n) {
@@ -65,7 +44,7 @@ return 2 * (n > 0) - 1;
 }
 
 /**
- * Returns true if
+ *
  */
 INLINE bool is_corner(const LVector2 &a_dir, const LVector2 &b_dir, PN_stdfloat cross_threshold) {
   return dot(a_dir, b_dir) <= 0 || fabs(cross(a_dir, b_dir)) > cross_threshold;
@@ -160,14 +139,6 @@ INLINE bool pixel_clash(const LRGBColorf &a, const LRGBColorf &b, PN_stdfloat th
  */
 INLINE PN_stdfloat shoelace(const LPoint2 &a, const LPoint2 &b) {
   return (b[0] - a[0]) * (a[1] + b[1]);
-}
-
-/**
- * Adds a contour.
- */
-INLINE void MSDFGen::Shape::
-add_contour(const MSDFGen::Contour &contour) {
-  contours.push_back(contour);
 }
 
 /**
@@ -314,22 +285,6 @@ bounds(PN_stdfloat &l, PN_stdfloat &b, PN_stdfloat &r, PN_stdfloat &t) const {
 }
 
 /**
- * Moves the start point of the edge segment.
- */
-INLINE void MSDFGen::LinearSegment::
-move_start_point(LPoint2 to) {
-    p[0] = to;
-}
-
-/**
- * Moves the end point of the edge segment.
- */
-INLINE void MSDFGen::LinearSegment::
-move_end_point(LPoint2 to) {
-  p[1] = to;
-}
-
-/**
  * Splits the edge segments into thirds which together represent the original edge.
  */
 INLINE void MSDFGen::LinearSegment::
@@ -337,24 +292,6 @@ split_in_thirds(MSDFGen::EdgeSegment *&part1, MSDFGen::EdgeSegment *&part2, MSDF
   part1 = new LinearSegment(p[0], point(1 / 3.0), color);
   part2 = new LinearSegment(point(1 / 3.0), point(2 / 3.0), color);
   part3 = new LinearSegment(point(2 / 3.0), p[1], color);
-}
-
-/**
- * Moves the start point of the edge segment.
- */
-INLINE void MSDFGen::CubicSegment::
-move_start_point(LPoint2 to) {
-  p[1] += to - p[0];
-  p[0] = to;
-}
-
-/**
- * Moves the end point of the edge segment.
- */
-INLINE void MSDFGen::CubicSegment::
-move_end_point(LPoint2 to) {
-  p[2] += to - p[3];
-  p[3] = to;
 }
 
 /**

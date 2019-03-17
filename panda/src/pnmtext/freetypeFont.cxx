@@ -729,7 +729,6 @@ render_multi_distance_field(PNMImage &image, PN_stdfloat pxrange,
           msd.b = sb.minDistance.distance;
         }
 
-        //std::cerr << x << ", " << row << " (w " << w << " h " << h << ")" << ", " << (msd.r/range+.5) << ", " << (msd.g/range+.5) << ", " << (msd.b/range+.5) << "\n";
         image.set_xel(x, row, msd.r/range+.5, msd.g/range+.5, msd.b/range+.5);
       }
     }

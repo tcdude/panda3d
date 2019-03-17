@@ -44,7 +44,7 @@ ConfigVariableInt text_msdf_cubic_search_steps
  PRC_DESC("Increase for higher precision in iterative search for closest point"
           "on a cubic Bezier curve."));
 ConfigVariableDouble text_msdf_edge_threshold
-("text-msdf-cubic-search-steps", 1.00000001,
+("text-msdf-edge-threshold", 1.00000001,
  PRC_DESC("Threshold value to perform error correction in MSDF generation."));
 
 /**
