@@ -47,19 +47,9 @@ int solve_quadratic(PN_stdfloat x[2], PN_stdfloat a, PN_stdfloat b, PN_stdfloat 
 }
 
 /**
- * ax^3 + bx^2 + cx + d = 0
- */
-int solve_cubic(PN_stdfloat x[3], PN_stdfloat a, PN_stdfloat b, PN_stdfloat c, PN_stdfloat d) {
-  if (fabs(a) < 1e-14) {
-    return solve_quadratic(x, b, c, d);
-  }
-  return solve_cubic_normed(x, b/a, c/a, d/a);
-}
-
-/**
  *
  */
-int solve_cubic_normed(PN_stdfloat *x, PN_stdfloat a, PN_stdfloat b, PN_stdfloat c) {
+static int solve_cubic_normed(PN_stdfloat x[3], PN_stdfloat a, PN_stdfloat b, PN_stdfloat c) {
   PN_stdfloat a2 = a * a;
   PN_stdfloat q  = (a2 - 3 * b) / 9;
   PN_stdfloat r  = (a * (2 * a2 - 9 * b) + 27 * c) / 54;
@@ -99,6 +89,16 @@ int solve_cubic_normed(PN_stdfloat *x, PN_stdfloat a, PN_stdfloat b, PN_stdfloat
 }
 
 /**
+ * ax^3 + bx^2 + cx + d = 0
+ */
+int solve_cubic(PN_stdfloat x[3], PN_stdfloat a, PN_stdfloat b, PN_stdfloat c, PN_stdfloat d) {
+  if (fabs(a) < 1e-14) {
+    return solve_quadratic(x, b, c, d);
+  }
+  return solve_cubic_normed(x, b/a, c/a, d/a);
+}
+
+/**
  * Assigns colors to edges of the shape in accordance to the multi-channel
  * distance field technique. May split some edges if necessary.
  * angleThreshold specifies the maximum angle (in radians) to be considered
@@ -113,7 +113,7 @@ edge_coloring_simple(MSDFGen::Shape &shape, PN_stdfloat angle_threshold, unsigne
     // Identify corners
     corners.clear();
     if (!contour.edges.empty()) {
-      LVector2 prevDirection = (*(contour.edges.end()-1))->direction(1);
+      LVector2 prevDirection = contour.edges.back()->direction(1);
       int index = 0;
       for (const MSDFGen::EdgeHolder &edge : contour.edges) {
         if (is_corner(normalize_non_zero(prevDirection), normalize_non_zero(edge->direction(0)), cross_threshold)) {
@@ -137,10 +137,11 @@ edge_coloring_simple(MSDFGen::Shape &shape, PN_stdfloat angle_threshold, unsigne
       switch_color(colors[2] = colors[0], seed);
       int corner = corners[0];
       if (contour.edges.size() >= 3) {
-        int m = contour.edges.size();
-        for (int i = 0; i < m; ++i)
+        int m = (int)contour.edges.size();
+        for (int i = 0; i < m; ++i) {
           contour.edges[(corner + i) % m]->color =
             (colors + 1)[int(3 + 2.875 * i / (m - 1) - 1.4375 + 0.5) - 3];
+        }
       } else if (contour.edges.size() >= 1) {
         // Less than three edge segments for three colors => edges must be split
         MSDFGen::EdgeSegment *parts[7] = { };
@@ -164,10 +165,10 @@ edge_coloring_simple(MSDFGen::Shape &shape, PN_stdfloat angle_threshold, unsigne
     }
     // Multiple corners
     else {
-        int cornerCount = corners.size();
+        int cornerCount = (int)corners.size();
         int spline = 0;
         int start = corners[0];
-        int m = contour.edges.size();
+        int m = (int)contour.edges.size();
         EdgeColor color = WHITE;
         switch_color(color, seed);
         EdgeColor initialColor = color;
@@ -213,7 +214,7 @@ bool MSDFGen::Shape::
 validate() const {
   for (const MSDFGen::Contour &contour : contours) {
     if (!contour.edges.empty()) {
-      LPoint2 corner = (*(contour.edges.end() - 1))->point(1);
+      LPoint2 corner = contour.edges.back()->point(1);
       for (const EdgeHolder &edge : contour.edges) {
         if (!edge) {
           return false;
@@ -292,7 +293,7 @@ MSDFGen::SignedDistance MSDFGen::QuadraticSegment::
 signed_distance(LPoint2 origin, PN_stdfloat &param) const {
   LVector2 qa = p[0] - origin;
   LVector2 ab = p[1] - p[0];
-  LVector2 br = p[0] + p[2] - p[1] - p[1];
+  LVector2 br = p[2] - p[1] - ab;
   PN_stdfloat a = dot(br, br);
   PN_stdfloat b = 3 * dot(ab, br);
   PN_stdfloat c = 2 * dot(ab, ab) + dot(qa, br);
@@ -489,7 +490,6 @@ winding() const {
   }
   else {
     LPoint2 prev = edges[edges.size()-1]->point(0);
-    std::vector<EdgeHolder>::const_iterator edge;
     for (const EdgeHolder &edge : edges) {
       LPoint2 cur = edge->point(0);
       total += shoelace(prev, cur);

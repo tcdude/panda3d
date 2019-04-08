@@ -45,7 +45,6 @@ INLINE PN_stdfloat shoelace(const LPoint2 &a, const LPoint2 &b);
 
 int solve_quadratic(PN_stdfloat x[2], PN_stdfloat a, PN_stdfloat b, PN_stdfloat c);
 int solve_cubic(PN_stdfloat x[3], PN_stdfloat a, PN_stdfloat b, PN_stdfloat c, PN_stdfloat d);
-int solve_cubic_normed(PN_stdfloat *x, PN_stdfloat a, PN_stdfloat b, PN_stdfloat c);
 
 /**
  * This class enables the generation of Multi-Channel Signed Distance Fields
